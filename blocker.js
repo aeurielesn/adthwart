@@ -205,11 +205,11 @@ function clickHide_rulesPending() {
 
 // Turn off click-to-hide
 function clickHide_deactivate() {
-	if(clickHideFiltersDialog) {
-		clickHideFiltersDialog.setAttribute('style', 'visibility: hidden');
-		document.body.removeChild(clickHideFiltersDialog);
-		clickHideFiltersDialog = null;
-	}
+    if(clickHideFiltersDialog) {
+        clickHideFiltersDialog.setAttribute('style', 'visibility: hidden');
+        document.body.removeChild(clickHideFiltersDialog);
+        clickHideFiltersDialog = null;
+    }
 
     if(currentElement) {
         unhighlightElements();
