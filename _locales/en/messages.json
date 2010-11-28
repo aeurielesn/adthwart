@@ -78,6 +78,14 @@
         "message": "delete",
         "description": "Word for 'delete'."
     },
+    "save_button": {
+        "message": "Save",
+        "description": "This is the label for the 'Save' buttons."
+    },
+    "add_button": {
+        "message": "Add selected",
+        "description": "This is the label for the 'Add selected' buttons."
+    },
     "remove_button": {
         "message": "Remove selected",
         "description": "This is the label for the 'Remove selected' buttons."

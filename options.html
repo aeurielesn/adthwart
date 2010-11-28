@@ -307,6 +307,73 @@ function deleteUserURLEntry(key) {
     saveOptions();
 }
 
+function editFilterListEntry(key) {
+	editingList = filterFiles[key];
+	var list = JSON.parse(localStorage[filterFiles[key]]);
+	
+	if(!$("#editFileFilters").is(":visible")) {
+        $("#editFileFilters").show();
+    }
+	
+    $("#removedFiltersBox").children().remove();
+    $("#currentFiltersBox").children().remove();
+
+	if(list.removed != "") {
+	    var filters = list.removed.split("\n");
+		for (var i in filters) {
+			appendToListBox("removedFiltersBox", filters[i]);
+		}
+	}
+	if(list.text != "") {
+		filters = list.text.split("\n");
+	    for (var i in filters) {
+	    	appendToListBox("currentFiltersBox", filters[i]);
+	    }
+	}
+}
+
+function removeFilterFromList() {
+    var currentFiltersBox = document.getElementById("currentFiltersBox");
+    for (var i = currentFiltersBox.length-1; i >= 0; i--) {
+        if (currentFiltersBox.options[i].selected) {
+        	appendToListBox("removedFiltersBox", currentFiltersBox.options[i].value);
+        	currentFiltersBox.remove(i);
+        }
+    }
+    saveOptions();
+}
+
+function addFilterToList() {
+    var removedFiltersBox = document.getElementById("removedFiltersBox");
+    for (var i = removedFiltersBox.length-1; i >= 0; i--) {
+        if (removedFiltersBox.options[i].selected) {
+            appendToListBox("currentFiltersBox", removedFiltersBox.options[i].value);
+            removedFiltersBox.remove(i);
+        }
+    }
+    saveOptions();
+}
+
+function saveFilterList() {
+	if($("#editFileFilters").is(":visible")) {
+		$("#editFileFilters").hide();
+	}
+	if(typeof editingList != "undefined") {
+		list = JSON.parse(localStorage[editingList]);
+	    var removedFiltersBox = document.getElementById("removedFiltersBox");
+	    var removedFilters = new Array();
+	    for (var i = 0; i < removedFiltersBox.length; i++)
+	    	removedFilters.push(removedFiltersBox.options[i].value);
+	    list.removed = removedFilters.join("\n");
+        var currentFiltersBox = document.getElementById("currentFiltersBox");
+        var currentFilters = new Array();
+        for (var i = 0; i < currentFiltersBox.length; i++)
+        	currentFilters.push(currentFiltersBox.options[i].value);
+        list.text = currentFilters.join("\n");        
+        localStorage[editingList] = JSON.stringify(list);
+	}
+}
+
 // Adds an entry for a filter list URL to the UI
 function addUserURLEntry(key, url) {
     var checkbox = document.createElement('input');
@@ -347,8 +414,7 @@ function addFilterListEntry(key) {
     label.innerHTML += " "; // Space to separate status message from description
     // Status message
     var msg = document.createElement("span");
-    msg.id = key + "_msg";
-    msg.class = "flMsg";
+    msg.innerHTML = ' <a href="#" onClick="editFilterListEntry(\'' + key + '\')"><span id="' + key + '_msg" class="flMsg"></span></a> ';
     var div = document.createElement('div');
     div.id = key + "_div";
     div.appendChild(checkbox);
@@ -387,6 +453,7 @@ $(function() {
     $('.refreshButton').button('option', 'icons', {primary: 'ui-icon-refresh'});
     $('.addButton').button('option', 'icons', {primary: 'ui-icon-plus'});
     $('.removeButton').button('option', 'icons', {primary: 'ui-icon-minus'});
+    $('.saveButton').button('option', 'icons', {primary: 'ui-icon-check'});
 });
 
 
@@ -424,6 +491,20 @@ chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
 <input type="text" value="" id="newURL" style="width:500px">
 <button class="addButton" onClick="addUserURLFromBox()"><span class="i18n_add_url_button"></span></button><br/>
 </div>
+
+<div id="editFileFilters">
+<button class="saveButton" onClick="saveFilterList()"><span class="i18n_save_button"></span></button>
+<table>
+<tr>
+<td><select id="removedFiltersBox" size="10" style="width: 500px; background: white;"></select></td>
+<td><button class="addButton" onClick="addFilterToList()"><span class="i18n_add_button"></span></button></td>
+</tr><tr>
+<td><select id="currentFiltersBox" size="10" style="width: 500px; background: white;"></select></td>
+<td><button class="removeButton" onClick="removeFilterFromList()"><span class="i18n_remove_button"></span></button></td>
+</tr>
+</table>
+</div>
+
 </div>
 
 <div id="tab-whitelisted">

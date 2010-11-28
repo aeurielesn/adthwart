@@ -127,8 +127,8 @@ function FilterListFetcher(nameOrUrl, callback) {
                 // future, don't believe it.
                 if((now - lastUpdated) > expires || lastUpdated > now)
                     lastUpdated = now;
-                
-                localStorage[fetcher.url] = JSON.stringify({lastDownloaded: now, lastUpdated: lastUpdated, expires: expires, text: this.responseText});
+                var synched = synchronizeList(fetcher.url, this.responseText);
+                localStorage[fetcher.url] = JSON.stringify({lastDownloaded: now, lastUpdated: lastUpdated, expires: expires, text: synched.text, removed: synched.removed});
                 fetcher.callback(fetcher);
                 return;
             } else {
@@ -163,4 +163,75 @@ function FilterListFetcher(nameOrUrl, callback) {
         fetcher.error = "Useless error message: " + e;
         fetcher.callback(fetcher);        
     }
+}
+
+function sanitizeContent(fetchedContent) {
+	var ret = new Array();
+	var filters = fetchedContent.split('\n');
+	for (var i in filters) {
+        // Remove any extra newline-type characters
+        var filter = filters[i].replace(/[\r\n]/, '');
+        // Ignore zero-length and commented-out lines
+        if(filter.length == 0)
+            continue;
+        ret.push(filter);
+	}
+	return ret;
+}
+
+//This function synchronize the filter's selections from the updated list and
+//the current setting of the user
+function synchronizeList(filterName, fetchedContentText) {
+	//console.log("Synchronizing " + filterName + ".");
+	var sanitizedContentArray = sanitizeContent(fetchedContentText);
+
+	// It's a completly new filter 
+	if(typeof localStorage[filterName] == "undefined") {
+		//console.log("Synchronization of " + filterName + " completed: it is a new filter list.");
+		return { text: sanitizedContentArray.join("\n"), removed: "" };
+	}
+
+	var current = JSON.parse(localStorage[filterName]);
+
+	if((typeof current.text == "undefined") || (typeof current.removed == "undefined")) {
+		//console.log("Synchronization of " + filterName + " completed: migrating.");
+		return { text: sanitizedContentArray.join("\n"), removed: "" };
+	}
+	
+	var currentFilters = current.text ? current.text.split('\n') : new Array();
+	var removedFilters = current.removed ? current.removed.split('\n') : new Array();
+	var currentFiltersLength = currentFilters.length;
+	var removedFiltersLength = removedFilters.length;
+
+	sanitizedContentArray.sort();
+	for (var i in sanitizedContentArray) {
+		var filter = sanitizedContentArray[i];
+		var cu = null, re = null;
+		
+		while(removedFiltersLength && (filter > removedFilters[0])) {
+			removedFiltersLength = removedFiltersLength - 1;
+			removedFilters.shift();
+		}
+		while(currentFiltersLength && (filter > currentFilters[0])) { 
+			currentFiltersLength = currentFiltersLength - 1;
+			currentFilters.shift();
+		}
+		
+		if(currentFiltersLength) cu = currentFilters[0];
+		if(removedFiltersLength) re = removedFilters[0];
+		
+		if((cu==null || filter < cu) && (re==null || filter < re)) {
+			currentFilters.push(filter);
+		} else if(filter == re) {
+			removedFiltersLength = removedFiltersLength - 1;
+			removedFilters.push(removedFilters.shift());
+		} else if(filter == cu) {
+			currentFiltersLength = currentFiltersLength - 1;
+			currentFilters.push(currentFilters.shift());
+		}
+	}
+	removedFilters.splice(0, removedFiltersLength);
+	currentFilters.splice(0, currentFiltersLength);
+	//console.log("Synchronization of " + filterName + " completed.");
+	return {text: currentFilters.join("\n"), removed: removedFilters.join("\n")};
 }
