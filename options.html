@@ -318,7 +318,7 @@ function editFilterListEntry(key) {
     $("#removedFiltersBox").children().remove();
     $("#currentFiltersBox").children().remove();
 
-	if(list.removed != "") {
+	if(list.removed && list.removed != "") {
 	    var filters = list.removed.split("\n");
 		for (var i in filters) {
 			appendToListBox("removedFiltersBox", filters[i]);
