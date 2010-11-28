@@ -364,11 +364,13 @@ function saveFilterList() {
 	    var removedFilters = new Array();
 	    for (var i = 0; i < removedFiltersBox.length; i++)
 	    	removedFilters.push(removedFiltersBox.options[i].value);
+	    removedFilters.sort();
 	    list.removed = removedFilters.join("\n");
         var currentFiltersBox = document.getElementById("currentFiltersBox");
         var currentFilters = new Array();
         for (var i = 0; i < currentFiltersBox.length; i++)
         	currentFilters.push(currentFiltersBox.options[i].value);
+        currentFilters.sort();
         list.text = currentFilters.join("\n");        
         localStorage[editingList] = JSON.stringify(list);
 	}
